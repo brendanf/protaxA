@@ -1,25 +1,47 @@
 #include <zlib.h>
 #include "defs.h"
 
+int insertion_free_length(const char * line) {
+  int i = 0, l = 0;
+  while (line[i] != '\0' && line[i] != '\n' && i < MAXLINE) {
+    if ((line[i] < 'a') || (line[i] > 'z')) {
+      l++;
+    }
+    i++;
+  };
+  return l;
+}
+
+void insertion_free_copy(const char * line, char * target) {
+  int i = 0, j = 0;
+  while (line[i] != '\0' && line[i] != '\n' && i < MAXLINE) {
+    if ((line[i] < 'a') || (line[i] > 'z')) {
+      target[j] = line[i];
+      j++;
+    }
+    i++;
+  }
+}
+
 SequenceSet *read_aligned_sequences(char *filename) {
   gzFile fp;
   char line[MAXLINE], *token;
-  int len,linecount, i, ok;
+  int len,linecount, i, ok, iflen;
   SequenceSet *s;
   char *thisfunction = "read_aligned_sequences";
-  
+
   if ((s = (SequenceSet *) malloc (sizeof(SequenceSet))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc SequenceSet.\n",thisfunction);
     perror(""); exit(-1);
   }
-      
+
   if ((fp = gzopen(filename,"r")) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
     perror(""); exit(-1);
   }
-  
+
   for (i=0;i<MAXLINE;i++) line[i] = '\0';
-  
+
   linecount=0;
   while (gzgets(fp, line, MAXLINE)) {
     linecount++;
@@ -39,16 +61,15 @@ SequenceSet *read_aligned_sequences(char *filename) {
     if (line[MAXLINE-2] != '\0') {
       fprintf(stderr,"ERROR (%s): line %d length in file '%s' exceeds MAXLINE %d.\n",thisfunction,linecount,filename,MAXLINE);
       exit(-1);
-    }    
+    }
   }
 
   /* calculate sequence length from last sequence */
-  len=0;
-  while (line[len] != '\n') len++;
+  len = insertion_free_length(line);
 
   s->alen = len;
   s->num_seqs = linecount/2;
-  
+
   if ((s->id = (char **) malloc(s->num_seqs * sizeof(char *))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc %d char ptr array.\n",thisfunction,s->num_seqs);
     perror("");exit(-1);
@@ -63,7 +84,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
       perror("");exit(-1);
     }
   }
-  
+
   gzrewind(fp);
   for (i=0;i<s->num_seqs; i++) {
     if (gzgets(fp, line, MAXLINE) == NULL) {
@@ -72,22 +93,23 @@ SequenceSet *read_aligned_sequences(char *filename) {
     }
     token = strtok(line," \t\n");
     s->id[i] = strdup(token+1);
-    
+
     if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d sequence (linecount %d) from file '%s'.\n",thisfunction,i,2*i+2,filename);
       perror("");exit(-1);
     }
-    if (strlen(line) != (len+1)) {
-      fprintf(stderr,"ERROR (%s): sequence lenghts differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
+    iflen = insertion_free_length(line);
+    if (iflen != len) {
+      fprintf(stderr,"ERROR (%s): sequence lengths differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
       perror("");exit(-1);
     }
-    
-    strncpy(s->seq[i], line, len);
+
+    insertion_free_copy(line, s->seq[i]);
     s->seq[i][len] = '\0';
   }
 
   gzclose(fp);
-  
+
   return(s);
 }
 
@@ -96,10 +118,10 @@ double pdist(char *a, char *b, int len) {
 
   for (i=0; i<len; i++) {
     /* if (((a[i] == 'A') || (a[i] == 'C') || (a[i] == 'G') || (a[i] == 'T')) || ((b[i] == 'A') || (b[i] == 'C') || (b[i] == 'G') || (b[i] == 'T'))) { */
-    if (((a[i] == 'A') || (a[i] == 'C') || (a[i] == 'G') || (a[i] == 'T')) && ((b[i] == 'A') || (b[i] == 'C') || (b[i] == 'G') || (b[i] == 'T'))) { 
+    if (((a[i] == 'A') || (a[i] == 'C') || (a[i] == 'G') || (a[i] == 'T')) && ((b[i] == 'A') || (b[i] == 'C') || (b[i] == 'G') || (b[i] == 'T'))) {
       okpositions++;
       if (a[i] != b[i])
-	mismatches++;
+        mismatches++;
     }
   }
   if (okpositions)
@@ -112,7 +134,7 @@ double pdist(char *a, char *b, int len) {
 int compute_distances(SequenceSet *a, char *seq, double *pdistances)
 {
   int i;
-  
+
   for (i=0; i<a->num_seqs; i++) {
     pdistances[i] = pdist(seq, a->seq[i], a->alen);
   }
@@ -122,62 +144,86 @@ int compute_distances(SequenceSet *a, char *seq, double *pdistances)
 
 int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m) {
   long unsigned int a, am;
-  int i,j,k, n2, n_remaining;
+  int i,j,k, n2, n_remaining, skip;
 
   /* sequence content, 4 bits for one character */
-  
+
   n2 = n / NUCLEOTIDES_IN_WORD;
   i=0;
   for (j=0; j<n2; j++) {
     a = 0;
     for (k=0; k<NUCLEOTIDES_IN_WORD; k++) {
       a <<= 4;
-      if (s[i] == 'A') {a += 1;}
-      else if (s[i] == 'C') {a += 2;}
-      else if (s[i] == 'G') {a += 4;}
-      else if (s[i] == 'T') {a += 8;}
-      i++;
+      do {
+        skip = 0;
+        if (s[i] == 'A') {a += 1;}
+        else if (s[i] == 'C') {a += 2;}
+        else if (s[i] == 'G') {a += 4;}
+        else if (s[i] == 'T') {a += 8;}
+        else if ((s[i] >= 'a') && (s[i] <= 'z')) {
+          skip = 1;
+        }
+        i++;
+      } while (skip);
     }
     b[j] = a;
   }
 
-  n_remaining = n - n2*NUCLEOTIDES_IN_WORD; 
+  n_remaining = n - n2*NUCLEOTIDES_IN_WORD;
   if (n_remaining) {
     a = 0;
     for (k=0; k<n_remaining; k++) {
       a <<= 4;
-      if (s[i] == 'A') {a += 1;}
-      else if (s[i] == 'C') {a += 2;}
-      else if (s[i] == 'G') {a += 4;}
-      else if (s[i] == 'T') {a += 8;}
-      i++;
+      do {
+        skip = 0;
+        if (s[i] == 'A') {a += 1;}
+        else if (s[i] == 'C') {a += 2;}
+        else if (s[i] == 'G') {a += 4;}
+        else if (s[i] == 'T') {a += 8;}
+        else if ((s[i] >= 'a') && (s[i] <= 'z')) {
+          skip = 1;
+        }
+        i++;
+      } while (skip);
     }
     b[j] = a;
   }
 
   /* mask, 1 bit for character: 1 ok, 0 not */
-  
+
   n2 = n / (NUCLEOTIDES_IN_WORD*4);
   i=0;
   for (j=0; j<n2; j++) {
     am = 0;
     for (k=0; k<NUCLEOTIDES_IN_WORD*4; k++) {
       am <<= 1;
-      if ((s[i] == 'A') || (s[i] == 'C') || (s[i] == 'G') || (s[i] == 'T')) 
-	am += 1;
-      i++;
+      do {
+        if ((s[i] == 'A') || (s[i] == 'C') || (s[i] == 'G') || (s[i] == 'T')) {
+          am += 1;
+          skip = 0;
+        } else if ((s[i] >= 'a') && (s[i] <= 'z')) {
+          skip = 1;
+        }
+        i++;
+      } while (skip);
     }
     m[j] = am;
   }
 
-  n_remaining = n - n2*NUCLEOTIDES_IN_WORD*4; 
+  n_remaining = n - n2*NUCLEOTIDES_IN_WORD*4;
   if (n_remaining) {
     am = 0;
     for (k=0; k<n_remaining; k++) {
       am <<= 1;
-      if ((s[i] == 'A') || (s[i] == 'C') || (s[i] == 'G') || (s[i] == 'T')) 
-	am += 1;
-      i++;
+      do {
+        if ((s[i] == 'A') || (s[i] == 'C') || (s[i] == 'G') || (s[i] == 'T')) {
+          am += 1;
+          skip = 0;
+        } else if ((s[i] >= 'a') && (s[i] <= 'z')) {
+          skip = 1;
+        }
+        i++;
+      } while (skip);
     }
     m[j] = am;
   }
@@ -189,22 +235,22 @@ int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m
 SequenceSetB *read_aligned_sequencesB(char *filename) {
   gzFile fp;
   char line[MAXLINE], *token;
-  int len,linecount, i, ok, ulen, mulen;
+  int len,linecount, i, ok, iflen, ulen, mulen;
   SequenceSetB *s;
   char *thisfunction = "read_aligned_sequences";
-  
+
   if ((s = (SequenceSetB *) malloc (sizeof(SequenceSetB))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc SequenceSetB.\n",thisfunction);
     perror(""); exit(-1);
   }
-      
+
   if ((fp = gzopen(filename,"r")) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
     perror(""); exit(-1);
   }
-  
+
   for (i=0;i<MAXLINE;i++) line[i] = '\0';
-  
+
   linecount=0;
   while (gzgets(fp, line, MAXLINE)) {
     linecount++;
@@ -224,12 +270,11 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
     if (line[MAXLINE-2] != '\0') {
       fprintf(stderr,"ERROR (%s): line %d length in file '%s' exceeds MAXLINE %d.\n",thisfunction,linecount,filename,MAXLINE);
       exit(-1);
-    }    
+    }
   }
-  
+
   /* calculate sequence length from last sequence */
-  len=0;
-  while (line[len] != '\n') len++;
+  len = insertion_free_length(line);;
 
   s->alen = len;
   ulen = len / NUCLEOTIDES_IN_WORD;
@@ -241,7 +286,7 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
     mulen++;
   s->mulen = mulen;
   s->num_seqs = linecount/2;
-  
+
   if ((s->id = (char **) malloc(s->num_seqs * sizeof(char *))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc %d char ptr array.\n",thisfunction,s->num_seqs);
     perror("");exit(-1);
@@ -264,7 +309,7 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
       perror("");exit(-1);
     }
   }
-  
+
   gzrewind(fp);
   for (i=0;i<s->num_seqs; i++) {
     if (gzgets(fp, line, MAXLINE) == NULL) {
@@ -273,21 +318,22 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
     }
     token = strtok(line," \t\n");
     s->id[i] = strdup(token+1);
-    
+
     if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d sequence (linecount %d) from file '%s'.\n",thisfunction,i,2*i+2,filename);
       perror("");exit(-1);
     }
-    if (strlen(line) != (len+1)) {
+    iflen = insertion_free_length(line);
+    if (iflen != len) {
       fprintf(stderr,"ERROR (%s): sequence lenghts differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
       perror("");exit(-1);
     }
-    
+
     nucleotide2binary(line, len, s->b[i], s->m[i]);
   }
-  
+
   gzclose(fp);
-  
+
   return(s);
 }
 
@@ -296,7 +342,7 @@ double pdistB(long unsigned int *a, long unsigned int *ma, long unsigned int *b,
 {
   int i, num_ok, num_matches;
   long unsigned int f;
-  
+
   num_ok=0;
   num_matches=0;
 
@@ -317,7 +363,7 @@ double pdistB(long unsigned int *a, long unsigned int *ma, long unsigned int *b,
 int compute_distancesB(SequenceSetB *a, long unsigned int *b, long unsigned int *m, double *pdistances)
 {
   int i;
-  
+
   for (i=0; i<a->num_seqs; i++) {
     pdistances[i] = pdistB(b, m, a->b[i], a->m[i], a->ulen, a->mulen);
   }
