@@ -49,20 +49,24 @@ int print_taxonomy(TaxonomyNode *node, int num_nodes);
 
 void scan_aligned_sequences(const char *filename, int *len, int *num_seqs);
 
-SequenceSet *read_aligned_sequences(char *filename, const int len, const int num_seqs);
-double pdist(char *a, char *b, int len);
-int compute_distances(SequenceSet *a, char *seq, double *pdistances);
+SequenceSet *read_aligned_sequences(const char *filename, const int len, const int num_seqs);
+double pdist(const char *a, const char *b, const int len);
+int compute_distances(const SequenceSet *a, const char *seq, double *pdistances);
 
-int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m);
-SequenceSetB *read_aligned_sequencesB(char *filename, const int len, const int num_seqs);
-double pdistB(long unsigned int *a, long unsigned int *ma, long unsigned int *b, long unsigned int *mb, int n, int n2);
-int compute_distancesB(SequenceSetB *a, long unsigned int *b, long unsigned int *m, double *pdistances);
+int nucleotide2binary(const char *s, const int n, long unsigned int *b, long unsigned int *m);
+SequenceSetB *read_aligned_sequencesB(const char *filename, const int len, const int num_seqs);
+double pdistB(const long unsigned int *a, const long unsigned int *ma,
+              const long unsigned int *b, const long unsigned int *mb,
+              const int n, const int n2);
+int compute_distancesB(const SequenceSetB *a,
+                       const long unsigned int *b, const long unsigned int *m,
+                       double *pdistances);
 
 /* routines_model.c */
 
 Model *read_model(char *filename);
 double **read_level_scalings(char *filename, int *num_levels);
-int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double *pdistances);
+int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances);
 int print_model(Model *m);
 
 

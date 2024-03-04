@@ -54,7 +54,7 @@ int main (int argc, char **argv) {
     printf("distances: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
     start_time = clock();
     printf("%s",iseq->id[i]);
-    compute_cnode_probs_best2(taxonomy, 0, 1.0, model, scs, pth, pdistances);
+    compute_cnode_probs_best2(taxonomy, 0, 1.0, model, (const double **)scs, pth, pdistances);
     printf("\n");
     now_time = clock();
     printf("classification: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);

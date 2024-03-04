@@ -64,7 +64,7 @@ void scan_aligned_sequences(const char *filename, int *alen, int *num_seqs) {
   gzclose(fp);
 }
 
-SequenceSet *read_aligned_sequences(char *filename, const int len, const int num_seqs) {
+SequenceSet *read_aligned_sequences(const char *filename, const int len, const int num_seqs) {
   gzFile fp;
   char line[MAXLINE], *token;
   int i, iflen;
@@ -128,7 +128,7 @@ SequenceSet *read_aligned_sequences(char *filename, const int len, const int num
   return(s);
 }
 
-double pdist(char *a, char *b, int len) {
+double pdist(const char *a, const char *b, const int len) {
   int i,mismatches=0,okpositions=0;
 
   for (i=0; i<len; i++) {
@@ -146,7 +146,7 @@ double pdist(char *a, char *b, int len) {
 }
 
 
-int compute_distances(SequenceSet *a, char *seq, double *pdistances)
+int compute_distances(const SequenceSet *a, const char *seq, double *pdistances)
 {
   int i;
 
@@ -157,7 +157,7 @@ int compute_distances(SequenceSet *a, char *seq, double *pdistances)
 }
 
 
-int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m) {
+int nucleotide2binary(const char *s, const int n, long unsigned int *b, long unsigned int *m) {
   long unsigned int a, am;
   int i,j,k, n2, n_remaining, skip;
 
@@ -246,8 +246,7 @@ int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m
   return (0);
 }
 
-
-SequenceSetB *read_aligned_sequencesB(char *filename, const int len, const int num_seqs) {
+SequenceSetB *read_aligned_sequencesB(const char *filename, const int len, const int num_seqs) {
   gzFile fp;
   char line[MAXLINE], *token;
   int i, ulen, mulen, iflen;
@@ -328,7 +327,9 @@ SequenceSetB *read_aligned_sequencesB(char *filename, const int len, const int n
 }
 
 #pragma GCC target ("sse4.2")
-double pdistB(long unsigned int *a, long unsigned int *ma, long unsigned int *b, long unsigned int *mb, int n, int n2)
+double pdistB(const long unsigned int *a, const long unsigned int *ma,
+              const long unsigned int *b, const long unsigned int *mb,
+              const int n, const int n2)
 {
   int i, num_ok, num_matches;
   long unsigned int f;
@@ -350,7 +351,8 @@ double pdistB(long unsigned int *a, long unsigned int *ma, long unsigned int *b,
     return (1.0);
 }
 
-int compute_distancesB(SequenceSetB *a, long unsigned int *b, long unsigned int *m, double *pdistances)
+int compute_distancesB(const SequenceSetB *a, const long unsigned int *b, const long unsigned int *m,
+                       double *pdistances)
 {
   int i;
 

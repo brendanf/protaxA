@@ -12,7 +12,7 @@ Model *read_model(char *filename) {
     fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
     perror(""); exit(-1);
   }
-    
+
   if ((m = (Model *) malloc (sizeof(Model))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc Model.\n", thisfunction);
     perror(""); exit(-1);
@@ -42,7 +42,7 @@ Model *read_model(char *filename) {
       perror(""); exit(-1);
     }
   }
-      
+
   rewind(fp);
 
   for (i=0; i<m->num_levels; i++) {
@@ -65,7 +65,7 @@ Model *read_model(char *filename) {
     }
   }
   fclose(fp);
-  
+
   return(m);
 }
 
@@ -74,7 +74,7 @@ double **read_level_scalings(char *filename, int *num_levels) {
   char line[MAXLINE], *token;
   double **sc;
   int i, j, nlev;
-  
+
   if ((fp = fopen(filename,"r")) == NULL) {
     fprintf(stderr,"ERROR: cannot read scalingfile '%s'.\n",filename);
     perror(""); exit(-1);
@@ -95,7 +95,7 @@ double **read_level_scalings(char *filename, int *num_levels) {
       perror(""); exit(-1);
     }
   }
-  
+
   rewind(fp);
 
   for (j=0; j<nlev; j++) {
@@ -103,7 +103,7 @@ double **read_level_scalings(char *filename, int *num_levels) {
       fprintf(stderr,"ERROR: cannot read scaling factors %d/%d from '%s'.\n",j+1,nlev,filename);
       perror(""); exit(-1);
     }
-      
+
     if ((token = strtok(line," \t")) == NULL) {
       fprintf(stderr,"ERROR: cannot read level %d 1st token from file '%s'.\n",nlev,filename);
       perror(""); exit(-1);
@@ -126,17 +126,18 @@ double **read_level_scalings(char *filename, int *num_levels) {
     }
   }
   fclose(fp);
-  
+
   *num_levels = nlev;
   return (sc);
 }
 
-int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double *pdistances) {
+int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances) {
   int i,j,cid,k;
-  double dist,mindist1, mindist2, maxz,ezsum, *beta, *sc;
+  double dist,mindist1, mindist2, maxz,ezsum, *beta;
+  const double *sc;
 
   /* model utilizes distances to best and 2nd best refseq neighbors in each node (mindist1, mindist2) */
-  
+
   beta = m->params[node[nid].level];
   sc = scs[node[nid].level];
   maxz = 0.0;
