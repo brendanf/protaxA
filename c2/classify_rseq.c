@@ -136,7 +136,7 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
 
 
 int main (int argc, char **argv) {
-  int i,j, num_tnodes, num_sclevels;
+  int i,j, num_tnodes, num_sclevels, rlen, n_rseq;
   SequenceSetB *rseq;
   TaxonomyNode *taxonomy;
   Model *model;
@@ -151,7 +151,8 @@ int main (int argc, char **argv) {
   }
 
   taxonomy = read_taxonomy(argv[1], &num_tnodes);
-  rseq = read_aligned_sequencesB(argv[2]);
+  scan_aligned_sequences(argv[2], &rlen, &n_rseq);
+  rseq = read_aligned_sequencesB(argv[2], rlen, n_rseq);
   add_rseq2taxonomy(argv[3], taxonomy);
   model = read_model(argv[4]);
   scs=read_level_scalings(argv[5], &num_sclevels);

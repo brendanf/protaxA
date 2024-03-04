@@ -2,7 +2,7 @@
 #include "defs.h"
 
 int main (int argc, char **argv) {
-  int i,j, num_tnodes, num_sclevels;
+  int i,j, num_tnodes, num_sclevels, rlen, ilen, n_rseq, n_iseq;
   SequenceSet *rseq,*iseq;
   TaxonomyNode *taxonomy;
   Model *model;
@@ -17,7 +17,8 @@ int main (int argc, char **argv) {
   }
 
   taxonomy = read_taxonomy(argv[1], &num_tnodes);
-  rseq = read_aligned_sequences(argv[2]);
+  scan_aligned_sequences(argv[2], &rlen, &n_rseq);
+  rseq = read_aligned_sequences(argv[2], rlen, n_rseq);
   add_rseq2taxonomy(argv[3], taxonomy);
   model = read_model(argv[4]);
   scs=read_level_scalings(argv[5], &num_sclevels);
@@ -27,8 +28,9 @@ int main (int argc, char **argv) {
     exit(0);
   }
   
-  pth = atof(argv[6]);  
-  iseq = read_aligned_sequences(argv[7]);
+  pth = atof(argv[6]);
+  scan_aligned_sequences(argv[7], &ilen, &n_iseq);
+  iseq = read_aligned_sequences(argv[7], ilen, n_iseq);
   
   if (rseq->alen != iseq->alen) {
     fprintf(stderr,"ERROR: sequence lengths different in two files (%d,%d), files '%s','%s'.\n",rseq->alen,iseq->alen,argv[2],argv[6]);

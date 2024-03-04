@@ -47,11 +47,14 @@ int print_taxonomy(TaxonomyNode *node, int num_nodes);
 
 /* routines_sequence.c */
 
-SequenceSet *read_aligned_sequences(char *filename);
+void scan_aligned_sequences(const char *filename, int *len, int *num_seqs);
+
+SequenceSet *read_aligned_sequences(char *filename, const int len, const int num_seqs);
 double pdist(char *a, char *b, int len);
 int compute_distances(SequenceSet *a, char *seq, double *pdistances);
+
 int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m);
-SequenceSetB *read_aligned_sequencesB(char *filename);
+SequenceSetB *read_aligned_sequencesB(char *filename, const int len, const int num_seqs);
 double pdistB(long unsigned int *a, long unsigned int *ma, long unsigned int *b, long unsigned int *mb, int n, int n2);
 int compute_distancesB(SequenceSetB *a, long unsigned int *b, long unsigned int *m, double *pdistances);
 

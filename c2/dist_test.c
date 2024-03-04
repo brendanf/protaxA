@@ -20,7 +20,7 @@ int get_mini(double *pdistances, int n) {
 
 
 int main (int argc, char **argv) {
-  int i, mini;
+  int i, mini, rlen, ilen, n_rseq, n_iseq;
   SequenceSetB *rseq,*iseq;
   double *pdistances;
   clock_t start_time, now_time;
@@ -30,9 +30,10 @@ int main (int argc, char **argv) {
     fprintf(stderr,"usage: dist_test rseqFASTA inputFASTA\n");
     exit(0);	    
   }
-
-  rseq = read_aligned_sequencesB(argv[1]);
-  iseq = read_aligned_sequencesB(argv[2]);
+  scan_aligned_sequences(argv[1], &rlen, &n_rseq);
+  rseq = read_aligned_sequencesB(argv[1], rlen, n_rseq);
+  scan_aligned_sequences(argv[2], &ilen, &n_iseq);
+  iseq = read_aligned_sequencesB(argv[2], ilen, n_iseq);
   
   if (rseq->alen != iseq->alen) {
     fprintf(stderr,"ERROR: sequence lengths different in two files (%d,%d), files '%s','%s'.\n",rseq->alen,iseq->alen,argv[1],argv[2]);

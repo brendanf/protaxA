@@ -23,25 +23,17 @@ void insertion_free_copy(const char * line, char * target) {
   }
 }
 
-SequenceSet *read_aligned_sequences(char *filename) {
+void scan_aligned_sequences(const char *filename, int *alen, int *num_seqs) {
   gzFile fp;
-  char line[MAXLINE], *token;
-  int len,linecount, i, ok, iflen;
-  SequenceSet *s;
-  char *thisfunction = "read_aligned_sequences";
-
-  if ((s = (SequenceSet *) malloc (sizeof(SequenceSet))) == NULL) {
-    fprintf(stderr,"ERROR (%s): cannot malloc SequenceSet.\n",thisfunction);
-    perror(""); exit(-1);
-  }
+  char line[MAXLINE];
+  int linecount, i;
+  char *thisfunction = "scan_aligned_sequences";
 
   if ((fp = gzopen(filename,"r")) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
     perror(""); exit(-1);
   }
-
   for (i=0;i<MAXLINE;i++) line[i] = '\0';
-
   linecount=0;
   while (gzgets(fp, line, MAXLINE)) {
     linecount++;
@@ -62,13 +54,37 @@ SequenceSet *read_aligned_sequences(char *filename) {
       fprintf(stderr,"ERROR (%s): line %d length in file '%s' exceeds MAXLINE %d.\n",thisfunction,linecount,filename,MAXLINE);
       exit(-1);
     }
+
   }
 
   /* calculate sequence length from last sequence */
-  len = insertion_free_length(line);
+  *alen = insertion_free_length(line);
+  *num_seqs = linecount/2;
+
+  gzclose(fp);
+}
+
+SequenceSet *read_aligned_sequences(char *filename, const int len, const int num_seqs) {
+  gzFile fp;
+  char line[MAXLINE], *token;
+  int i, iflen;
+  SequenceSet *s;
+  char *thisfunction = "read_aligned_sequences";
+
+  if ((s = (SequenceSet *) malloc (sizeof(SequenceSet))) == NULL) {
+    fprintf(stderr,"ERROR (%s): cannot malloc SequenceSet.\n",thisfunction);
+    perror(""); exit(-1);
+  }
 
   s->alen = len;
-  s->num_seqs = linecount/2;
+  s->num_seqs = num_seqs;
+
+  if ((fp = gzopen(filename,"r")) == NULL) {
+    fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
+    perror(""); exit(-1);
+  }
+
+  for (i=0;i<MAXLINE;i++) line[i] = '\0';
 
   if ((s->id = (char **) malloc(s->num_seqs * sizeof(char *))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc %d char ptr array.\n",thisfunction,s->num_seqs);
@@ -85,8 +101,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
     }
   }
 
-  gzrewind(fp);
-  for (i=0;i<s->num_seqs; i++) {
+  for (i=0;i<num_seqs; i++) {
     if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d name (linecount %d) from file '%s'.\n",thisfunction,i,2*i+1,filename);
       perror("");exit(-1);
@@ -99,7 +114,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
       perror("");exit(-1);
     }
     iflen = insertion_free_length(line);
-    if (iflen != len) {
+    if (iflen != s->alen) {
       fprintf(stderr,"ERROR (%s): sequence lengths differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
       perror("");exit(-1);
     }
@@ -232,49 +247,17 @@ int nucleotide2binary(char *s, int n, long unsigned int *b, long unsigned int *m
 }
 
 
-SequenceSetB *read_aligned_sequencesB(char *filename) {
+SequenceSetB *read_aligned_sequencesB(char *filename, const int len, const int num_seqs) {
   gzFile fp;
   char line[MAXLINE], *token;
-  int len,linecount, i, ok, iflen, ulen, mulen;
+  int i, ulen, mulen, iflen;
   SequenceSetB *s;
-  char *thisfunction = "read_aligned_sequences";
+  char *thisfunction = "read_aligned_sequencesB";
 
   if ((s = (SequenceSetB *) malloc (sizeof(SequenceSetB))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc SequenceSetB.\n",thisfunction);
     perror(""); exit(-1);
   }
-
-  if ((fp = gzopen(filename,"r")) == NULL) {
-    fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
-    perror(""); exit(-1);
-  }
-
-  for (i=0;i<MAXLINE;i++) line[i] = '\0';
-
-  linecount=0;
-  while (gzgets(fp, line, MAXLINE)) {
-    linecount++;
-    if (line[MAXLINE-2] != '\0') {
-      fprintf(stderr,"ERROR (%s): line %d length in file '%s' exceeds MAXLINE %d.\n",thisfunction,linecount,filename,MAXLINE);
-      exit(-1);
-    }
-    if (line[0] != '>') {
-      fprintf(stderr,"ERROR (%s): line %d in file '%s' doesn't start with '>' but '%c'.\n",thisfunction,linecount,filename,line[0]);
-      exit(-1);
-    }
-    linecount++;
-    if (gzgets(fp, line, MAXLINE) == NULL) {
-      fprintf(stderr,"ERROR (%s): cannot read line %d from file '%s'.\n",thisfunction,linecount,filename);
-      exit(-1);
-    }
-    if (line[MAXLINE-2] != '\0') {
-      fprintf(stderr,"ERROR (%s): line %d length in file '%s' exceeds MAXLINE %d.\n",thisfunction,linecount,filename,MAXLINE);
-      exit(-1);
-    }
-  }
-
-  /* calculate sequence length from last sequence */
-  len = insertion_free_length(line);;
 
   s->alen = len;
   ulen = len / NUCLEOTIDES_IN_WORD;
@@ -285,7 +268,7 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
   if (len > mulen * NUCLEOTIDES_IN_WORD / 4)
     mulen++;
   s->mulen = mulen;
-  s->num_seqs = linecount/2;
+  s->num_seqs = num_seqs;
 
   if ((s->id = (char **) malloc(s->num_seqs * sizeof(char *))) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot malloc %d char ptr array.\n",thisfunction,s->num_seqs);
@@ -310,7 +293,13 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
     }
   }
 
-  gzrewind(fp);
+  if ((fp = gzopen(filename,"r")) == NULL) {
+    fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
+    perror(""); exit(-1);
+  }
+
+  for (i=0;i<MAXLINE;i++) line[i] = '\0';
+
   for (i=0;i<s->num_seqs; i++) {
     if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d name (linecount %d) from file '%s'.\n",thisfunction,i,2*i+1,filename);
@@ -323,10 +312,11 @@ SequenceSetB *read_aligned_sequencesB(char *filename) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d sequence (linecount %d) from file '%s'.\n",thisfunction,i,2*i+2,filename);
       perror("");exit(-1);
     }
+
     iflen = insertion_free_length(line);
     if (iflen != len) {
-      fprintf(stderr,"ERROR (%s): sequence lenghts differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
-      perror("");exit(-1);
+      fprintf(stderr,"ERROR (%s): sequence length %d differs from %d, line %d, file '%s':\n%s\n",thisfunction,iflen,len,2*i+2,filename,line);
+      exit(-1);
     }
 
     nucleotide2binary(line, len, s->b[i], s->m[i]);
