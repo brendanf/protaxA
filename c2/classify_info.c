@@ -1,7 +1,7 @@
 #include <time.h>
 #include "defs.h"
 
-int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double prevprob, Model *m, double * restrict * restrict scs, double pth, const double *pdistances) {
+int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double prevprob, Model *m, double * restrict * restrict scs, double pth, double rth, const double *pdistances) {
   int i,j,cid,k;
   double dist, mindist1, mindist2, maxz,ezsum, *beta, *sc;
 
@@ -73,13 +73,15 @@ int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double pre
     node[cid].prob *= prevprob;
     if (node[cid].no_rseqs)
       node[nid].sumcprob_no_rseqs += node[cid].prob;
-    if ((node[cid].no_rseqs == 0) && (node[cid].prob >= pth)) {
-      printf("%s %d %s %f dist1: %d %.3f dist2: %d %.3f \n", qid, node[cid].level, node[cid].name, node[cid].prob, node[cid].ind1, node[cid].dist1,node[cid].ind2, node[cid].dist2);
-      if (node[cid].num_cnodes)
-	compute_cnode_probs(qid, node, cid, node[cid].prob, m, scs, pth, pdistances);
+    if (node[cid].no_rseqs == 0) {
+      if (node[cid].prob >= rth) {
+        printf("%s %d %s %f dist1: %d %.3f dist2: %d %.3f \n", qid, node[cid].level, node[cid].name, node[cid].prob, node[cid].ind1, node[cid].dist1,node[cid].ind2, node[cid].dist2);
+      }
+      if (node[cid].num_cnodes && (node[cid].prob >= pth))
+        compute_cnode_probs(qid, node, cid, node[cid].prob, m, scs, pth, rth, pdistances);
     }
   }
-  if (node[nid].sumcprob_no_rseqs >= pth) {
+  if (node[nid].sumcprob_no_rseqs >= rth) {
     if (node[nid].level == 0)
       printf("%s %d %s %f\n",qid, node[nid].level+1, UNKNAME, node[nid].sumcprob_no_rseqs);
     else
@@ -97,14 +99,14 @@ int main (int argc, char **argv) {
   SequenceSetB *rseq,*iseq;
   TaxonomyNode *taxonomy;
   Model *model;
-  double pth, **scs;
+  double pth, rth, **scs;
   double *pdistances;
 
   iopt = get_input_options(argc, argv);
 
   if (argc - optind != 7) {
     fprintf(stderr,"classify sequences and print out information regarding distances to refseqs\n");
-    fprintf(stderr,"usage: classify_info [-l len] [-r n_rseq] [-i n_iseq] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
+    fprintf(stderr,"usage: classify_info [-l len] [-r n_rseq] [-i n_iseq] [-t reporting_threshold] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
     exit(0);
   }
 
@@ -120,6 +122,11 @@ int main (int argc, char **argv) {
   }
 
   pth = atof(argv[optind++]);
+  if (iopt.rth < 0.0) {
+    rth = pth;
+  } else {
+    rth = iopt.rth;
+  }
   ifile = argv[optind++];
 
   read_sequence_setsB(iopt, rfile, ifile, &rseq, &iseq);
@@ -136,7 +143,7 @@ int main (int argc, char **argv) {
 
   for (i=0; i<iseq->num_seqs; i++) {
     compute_distancesB(rseq, iseq->b[i], iseq->m[i], pdistances);
-    compute_cnode_probs(iseq->id[i], taxonomy, 0, 1.0, model, scs, pth, pdistances);
+    compute_cnode_probs(iseq->id[i], taxonomy, 0, 1.0, model, scs, pth, rth, pdistances);
   }
 
   return(0);

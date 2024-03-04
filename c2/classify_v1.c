@@ -8,7 +8,7 @@ int main (int argc, char **argv) {
   SequenceSet *rseq,*iseq;
   TaxonomyNode *taxonomy;
   Model *model;
-  double pth, **scs;
+  double pth, rth, **scs;
   double *pdistances;
   clock_t start_time, now_time;
 
@@ -16,7 +16,7 @@ int main (int argc, char **argv) {
 
   if (argc - optind != 7) {
     fprintf(stderr,"classify sequences and measure timing (sequences represented as character strings)\n");
-    fprintf(stderr,"usage: classify_v1 [-l len] [-r n_rseq] [-i n_iseq] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
+    fprintf(stderr,"usage: classify_v1 [-l len] [-r n_rseq] [-i n_iseq] [-t reporting_threshold] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
     exit(0);
   }
 
@@ -32,6 +32,12 @@ int main (int argc, char **argv) {
   }
 
   pth = atof(argv[optind++]);
+  if (iopt.rth < 0.0) {
+    rth = pth;
+  } else {
+    rth = iopt.rth;
+  }
+
   ifile = argv[optind++];
 
   read_sequence_sets(iopt, rfile, ifile, &rseq, &iseq);
@@ -52,7 +58,7 @@ int main (int argc, char **argv) {
     now_time = clock();
     fprintf(stderr, "distances: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
     start_time = clock();
-    compute_cnode_probs_best2(iseq->id[i], taxonomy, 0, 1.0, model, (const double **)scs, pth, pdistances);
+    compute_cnode_probs_best2(iseq->id[i], taxonomy, 0, 1.0, model, (const double **)scs, pth, rth, pdistances);
     now_time = clock();
     fprintf(stderr, "classification: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
   }

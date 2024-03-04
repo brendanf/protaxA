@@ -131,7 +131,7 @@ double **read_level_scalings(char *filename, int *num_levels) {
   return (sc);
 }
 
-int compute_cnode_probs_best2(const char *qid, TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances) {
+int compute_cnode_probs_best2(const char *qid, TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, double rth, const double *pdistances) {
   int i,j,cid,k;
   double dist,mindist1, mindist2, maxz,ezsum, *beta;
   const double *sc;
@@ -197,13 +197,15 @@ int compute_cnode_probs_best2(const char *qid, TaxonomyNode *node, int nid, doub
     node[cid].prob *= prevprob;
     if (node[cid].no_rseqs)
       node[nid].sumcprob_no_rseqs += node[cid].prob;
-    if ((node[cid].no_rseqs == 0) && (node[cid].prob >= pth)) {
-      printf("%s %d %s %f\n", qid, node[cid].level, node[cid].name, node[cid].prob);
-      if (node[cid].num_cnodes)
-	compute_cnode_probs_best2(qid, node, cid, node[cid].prob, m, scs, pth, pdistances);
+    if (node[cid].no_rseqs == 0) {
+      if (node[cid].prob >= rth) {
+        printf("%s %d %s %f\n", qid, node[cid].level, node[cid].name, node[cid].prob);
+      }
+      if (node[cid].num_cnodes && (node[cid].prob >= pth))
+        compute_cnode_probs_best2(qid, node, cid, node[cid].prob, m, scs, pth, rth, pdistances);
     }
   }
-  if (node[nid].sumcprob_no_rseqs >= pth) {
+  if (node[nid].sumcprob_no_rseqs >= rth) {
     if (node[nid].level == 0)
       printf("%s %d %s %f\n",qid, node[nid].level + 1, UNKNAME, node[nid].sumcprob_no_rseqs);
     else

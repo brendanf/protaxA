@@ -14,7 +14,7 @@ int *read_rseq_indices(char *filename, int *num_indices) {
   char line[MAXLINE], *token;
   int *rindex;
   int i, j, n;
-  
+
   if ((fp = fopen(filename,"r")) == NULL) {
     fprintf(stderr,"ERROR: cannot read input rseq indices '%s'.\n",filename);
     perror(""); exit(-1);
@@ -34,7 +34,7 @@ int *read_rseq_indices(char *filename, int *num_indices) {
       fprintf(stderr,"ERROR: cannot read index %d/%d from '%s'.\n",j+1,n,filename);
       perror(""); exit(-1);
     }
-      
+
     if ((token = strtok(line," \t")) == NULL) {
       fprintf(stderr,"ERROR: cannot read %d/%d token from file '%s'.\n",j+1,n,filename);
       perror(""); exit(-1);
@@ -42,12 +42,12 @@ int *read_rseq_indices(char *filename, int *num_indices) {
     rindex[j] = atoi(token);
   }
   fclose(fp);
-  
+
   *num_indices = n;
   return (rindex);
 }
 
-int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double *pdistances, int self_index) {
+int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double rth, double *pdistances, int self_index) {
   int i,j,cid,k;
   double dist,mindist1, mindist2, maxz,ezsum, *beta, *sc;
   int num_rseqs;
@@ -77,11 +77,11 @@ int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double pre
         }
       }
     }
-    
+
     /* printf("  %s %f %f\n",node[cid].name,mindist,avedist); */
-    
+
     /* use prob temporarily to store z */
-    if (node[cid].isunk) {     
+    if (node[cid].isunk) {
       node[cid].prob = 0.0;
       node[cid].no_rseqs = 1;
     }
@@ -98,7 +98,7 @@ int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double pre
     if (node[cid].prob > maxz)
       maxz = node[cid].prob;
   }
-  
+
   ezsum = 1e-100;
   for (i=0; i<node[nid].num_cnodes; i++) {
     cid = node[nid].cnode_index[i];
@@ -118,13 +118,15 @@ int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double pre
     node[cid].prob *= prevprob;
     if (node[cid].no_rseqs)
       node[nid].sumcprob_no_rseqs += node[cid].prob;
-    if ((node[cid].no_rseqs == 0) && (node[cid].prob >= pth)) {
-      printf("%s %s %f",qid, node[cid].name, node[cid].prob);
-      if (node[cid].num_cnodes)
-        compute_cnode_probs(qid, node, cid, node[cid].prob, m, scs, pth, pdistances, self_index);
+    if (node[cid].no_rseqs == 0) {
+      if (node[cid].prob >= rth) {
+        printf("%s %s %f",qid, node[cid].name, node[cid].prob);
+      }
+      if (node[cid].num_cnodes && (node[cid].prob >= pth))
+        compute_cnode_probs(qid, node, cid, node[cid].prob, m, scs, pth, rth, pdistances, self_index);
     }
   }
-  if (node[nid].sumcprob_no_rseqs >= pth) {
+  if (node[nid].sumcprob_no_rseqs >= rth) {
     if (node[nid].level == 0)
       printf("%s %s %f",UNKNAME, qid, node[nid].sumcprob_no_rseqs);
     else
@@ -142,16 +144,16 @@ int main (int argc, char **argv) {
   SequenceSetB *rseq;
   TaxonomyNode *taxonomy;
   Model *model;
-  double pth, **scs;
+  double pth, rth, **scs;
   double *pdistances;
   int n_input_index, *input_index;
 
-  iopt = get_input_options_custom(argc, argv, ":l:r:");
+  iopt = get_input_options_custom(argc, argv, ":l:r:t:");
 
   if (argc - optind != 7) {
     fprintf(stderr, "classify reference sequences (whose indices in index_file) by not utilizing self-similarity\n");
     fprintf(stderr,"usage: classify_rseq [-l len] [-r n_rseq] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold input_rindex_file\n");
-    exit(0);	    
+    exit(0);
   }
 
   taxonomy = read_taxonomy(argv[optind++], &num_tnodes);
@@ -164,8 +166,13 @@ int main (int argc, char **argv) {
     fprintf(stderr,"ERROR: %d model levels but %d scaling levels, files '%s' and '%s'.\n", model->num_levels, num_sclevels, argv[4], argv[5]);
     exit(0);
   }
-  
+
   pth = atof(argv[optind++]);
+  if (iopt.rth < 0.0) {
+    rth = pth;
+  } else {
+    rth = iopt.rth;
+  }
 
   if (iopt.len * iopt.n_rseq == 0) {
     scan_aligned_sequences(rfile, &iopt.len, &iopt.n_rseq);
@@ -173,7 +180,7 @@ int main (int argc, char **argv) {
   rseq = read_aligned_sequencesB(rfile, iopt.len, iopt.n_rseq);
 
   input_index = read_rseq_indices(argv[optind++], &n_input_index);
-  
+
   if ((pdistances = (double *) malloc(rseq->num_seqs * sizeof(double))) == NULL) {
     fprintf(stderr,"ERROR: cannot maloc %d doubles for pdistances.\n",rseq->num_seqs);
     perror(""); exit(-1);
@@ -182,8 +189,8 @@ int main (int argc, char **argv) {
   for (i=0; i<n_input_index; i++) {
     j = input_index[i];
     compute_distancesB(rseq, rseq->b[j], rseq->m[j], pdistances);
-    compute_cnode_probs(rseq->id[j], taxonomy, 0, 1.0, model, scs, pth, pdistances, j);
+    compute_cnode_probs(rseq->id[j], taxonomy, 0, 1.0, model, scs, pth, rth, pdistances, j);
   }
-  
+
   return(0);
 }

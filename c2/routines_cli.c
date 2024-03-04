@@ -1,13 +1,14 @@
 #include "defs.h"
 
 InputOptions get_input_options(const int argc, char * const * argv) {
-  return get_input_options_custom(argc, argv, ":l:r:i:");
+  return get_input_options_custom(argc, argv, ":l:r:i:t:");
 }
 
 InputOptions get_input_options_custom(const int argc, char * const * argv,
                                       const char * options) {
   int opt;
-  InputOptions iopt = {0, 0, 0};
+  InputOptions iopt = {-1.0, 0, 0, 0};
+  char *thresh_result;
 
   while ((opt = getopt(argc, argv, options)) > 0) {
     switch(opt) {
@@ -34,6 +35,17 @@ InputOptions get_input_options_custom(const int argc, char * const * argv,
         exit(-1);
       }
       fprintf(stderr, "Using user supplied count of input sequences: %d\n", iopt.n_iseq);
+      break;
+    case 't':
+      iopt.rth = strtod(optarg, &thresh_result);
+      if (optarg == thresh_result) {
+        fprintf(stderr, "ERROR: could not interpret argument '%s' as a number.\n", optarg);
+        exit(-1);
+      }
+      if (iopt.rth < 0.0 || iopt.rth > 1.0) {
+        fprintf(stderr, "ERROR: reporting threshold must be in the range [0,1]. value: %f\n", iopt.rth);
+        exit(-1);
+      }
       break;
     case ':':
       fprintf(stderr, "Option -%c requires an operand\n", optopt);
