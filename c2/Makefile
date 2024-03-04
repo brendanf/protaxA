@@ -1,4 +1,4 @@
-C = gcc
+CC = gcc
 CFLAGS = -O2
 LDFLAGS =
 LIBS = -lm -lz

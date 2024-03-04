@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -O2
 LDFLAGS =
-LIBS = -lm
+LIBS = -lm -lz
 
 PROGS = create_xdata_best2 trainclassify_best2 classify_best2 classify_best2fast classify_mxcode
 PROGS_SRCS = $(PROGS:=.c)

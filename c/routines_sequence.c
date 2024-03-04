@@ -1,7 +1,8 @@
+#include <zlib.h>
 #include "defs.h"
 
 SequenceSet *read_aligned_sequences(char *filename) {
-  FILE *fp;
+  gzFile fp;
   char line[MAXLINE], *token;
   int len,linecount, i, ok;
   SequenceSet *s;
@@ -12,7 +13,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
     perror(""); exit(-1);
   }
       
-  if ((fp = fopen(filename,"r")) == NULL) {
+  if ((fp = gzopen(filename,"r")) == NULL) {
     fprintf(stderr,"ERROR (%s): cannot open '%s' for reading.\n",thisfunction,filename);
     perror(""); exit(-1);
   }
@@ -20,7 +21,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
   for (i=0;i<MAXLINE;i++) line[i] = '\0';
   
   linecount=0;
-  while (fgets(line, MAXLINE, fp)) {
+  while (gzgets(fp, line, MAXLINE)) {
     linecount++;
     if (line[MAXLINE-2] != '\0') {
       fprintf(stderr,"ERROR (%s): line %d length in file '%s' exceeds MAXLINE %d.\n",thisfunction,linecount,filename,MAXLINE);
@@ -31,7 +32,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
       exit(-1);
     }
     linecount++;
-    if (fgets(line, MAXLINE, fp) == NULL) {
+    if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read line %d from file '%s'.\n",thisfunction,linecount,filename);
       exit(-1);
     }
@@ -63,16 +64,16 @@ SequenceSet *read_aligned_sequences(char *filename) {
     }
   }
   
-  rewind(fp);
+  gzrewind(fp);
   for (i=0;i<s->num_seqs; i++) {
-    if (fgets(line, MAXLINE, fp) == NULL) {
+    if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d name (linecount %d) from file '%s'.\n",thisfunction,i,2*i+1,filename);
       perror("");exit(-1);
     }
     token = strtok(line," \t\n");
     s->id[i] = strdup(token+1);
     
-    if (fgets(line, MAXLINE, fp) == NULL) {
+    if (gzgets(fp, line, MAXLINE) == NULL) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d sequence (linecount %d) from file '%s'.\n",thisfunction,i,2*i+2,filename);
       perror("");exit(-1);
     }
@@ -85,7 +86,7 @@ SequenceSet *read_aligned_sequences(char *filename) {
     s->seq[i][len] = '\0';
   }
 
-  fclose(fp);
+  gzclose(fp);
   
   return(s);
 }
