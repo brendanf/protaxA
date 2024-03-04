@@ -1,7 +1,7 @@
 C = gcc
 CFLAGS = -O2
 LDFLAGS =
-LIBS = -lm
+LIBS = -lm -lz
 
 PROGS = dist_test classify_v1 classify_v2 classify_info classify_rseq
 PROGS_SRCS = $(PROGS:=.c)
