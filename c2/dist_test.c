@@ -14,34 +14,33 @@ int get_mini(double *pdistances, int n) {
       best = pdistances[i];
     }
   }
-    
+
   return (mini);
 }
 
-
 int main (int argc, char **argv) {
-  int i, mini, rlen, ilen, n_rseq, n_iseq;
+  InputOptions iopt;
+  int i, mini;
   SequenceSetB *rseq,*iseq;
+  char *rfile, *ifile;
   double *pdistances;
   clock_t start_time, now_time;
-  
-  if (argc < 3) {
+
+  iopt = get_input_options(argc, argv);
+
+  if (argc - optind != 2) {
     fprintf(stderr,"dist_test: calculate all pdistances between input and reference sequences and print the best for each input sequence\n");
-    fprintf(stderr,"usage: dist_test rseqFASTA inputFASTA\n");
-    exit(0);	    
-  }
-  scan_aligned_sequences(argv[1], &rlen, &n_rseq);
-  rseq = read_aligned_sequencesB(argv[1], rlen, n_rseq);
-  scan_aligned_sequences(argv[2], &ilen, &n_iseq);
-  iseq = read_aligned_sequencesB(argv[2], ilen, n_iseq);
-  
-  if (rseq->alen != iseq->alen) {
-    fprintf(stderr,"ERROR: sequence lengths different in two files (%d,%d), files '%s','%s'.\n",rseq->alen,iseq->alen,argv[1],argv[2]);
+    fprintf(stderr,"usage: dist_test [-l len] [-r n_rseq] [-i n_iseq] rseqFASTA inputFASTA\n");
     exit(0);
   }
 
+  rfile = argv[optind++];
+  ifile = argv[optind++];
+
+  read_sequence_setsB(iopt, rfile, ifile, &rseq, &iseq);
+
   if ((pdistances = (double *) malloc(rseq->num_seqs * sizeof(double))) == NULL) {
-    fprintf(stderr,"ERROR: cannot maloc %d doubles for pdistances.\n",rseq->num_seqs);
+    fprintf(stderr,"ERROR: cannot malloc %d doubles for pdistances.\n",rseq->num_seqs);
     perror(""); exit(-1);
   }
 
@@ -58,6 +57,5 @@ int main (int argc, char **argv) {
   now_time = clock();
   fprintf(stderr,"timing: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
 
-  
   return(0);
 }

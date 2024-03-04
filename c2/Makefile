@@ -6,7 +6,7 @@ LIBS = -lm -lz
 PROGS = dist_test classify_v1 classify_v2 classify_info classify_rseq
 PROGS_SRCS = $(PROGS:=.c)
 
-ROUTINES_SRCS = routines_taxonomy.c routines_sequence.c routines_model.c
+ROUTINES_SRCS = routines_taxonomy.c routines_sequence.c routines_model.c routines_cli.c
 ROUTINES_OBJS = $(ROUTINES_SRCS:.c=.o)
 
 DEFS = defs.h

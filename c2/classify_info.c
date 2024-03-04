@@ -34,9 +34,9 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
     }
 
     /* printf("  %s %f %f\n",node[cid].name,mindist,avedist); */
-    
+
     /* use prob temporarily to store z */
-    if (node[cid].isunk) {     
+    if (node[cid].isunk) {
       node[cid].prob = 0.0;
       node[cid].no_rseqs = 1;
     }
@@ -53,7 +53,7 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
     if (node[cid].prob > maxz)
       maxz = node[cid].prob;
   }
-  
+
   ezsum = 1e-100;
   for (i=0; i<node[nid].num_cnodes; i++) {
     cid = node[nid].cnode_index[i];
@@ -91,39 +91,38 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
 
 
 int main (int argc, char **argv) {
-  int i,j, num_tnodes, num_sclevels, rlen, ilen, n_rseq, n_iseq;
+  InputOptions iopt;
+  char *rfile, *ifile;
+  int i,j, num_tnodes, num_sclevels;
   SequenceSetB *rseq,*iseq;
   TaxonomyNode *taxonomy;
   Model *model;
   double pth, **scs;
   double *pdistances;
-  
-  if (argc < 7) {
+
+  iopt = get_input_options(argc, argv);
+
+  if (argc - optind != 7) {
     fprintf(stderr,"classify sequences and print out information regarding distances to refseqs\n");
-    fprintf(stderr,"usage: classify taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
-    exit(0);	    
+    fprintf(stderr,"usage: classify_info [-l len] [-r n_rseq] [-i n_iseq] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
+    exit(0);
   }
 
-  taxonomy = read_taxonomy(argv[1], &num_tnodes);
-  scan_aligned_sequences(argv[2], &rlen, &n_rseq);
-  rseq = read_aligned_sequencesB(argv[2], rlen, n_rseq);
-  add_rseq2taxonomy(argv[3], taxonomy);
-  model = read_model(argv[4]);
-  scs=read_level_scalings(argv[5], &num_sclevels);
+  taxonomy = read_taxonomy(argv[optind++], &num_tnodes);
+  rfile = argv[optind++];
+  add_rseq2taxonomy(argv[optind++], taxonomy);
+  model = read_model(argv[optind++]);
+  scs=read_level_scalings(argv[optind++], &num_sclevels);
 
   if (model->num_levels != num_sclevels) {
     fprintf(stderr,"ERROR: %d model levels but %d scaling levels, files '%s' and '%s'.\n", model->num_levels, num_sclevels, argv[4], argv[5]);
     exit(0);
   }
-  
-  pth = atof(argv[6]);  
-  scan_aligned_sequences(argv[7], &ilen, &n_iseq);
-  iseq = read_aligned_sequencesB(argv[7], ilen, n_iseq);
-  
-  if (rseq->alen != iseq->alen) {
-    fprintf(stderr,"ERROR: sequence lengths different in two files (%d,%d), files '%s','%s'.\n",rseq->alen,iseq->alen,argv[2],argv[6]);
-    exit(0);
-  }
+
+  pth = atof(argv[optind++]);
+  ifile = argv[optind++];
+
+  read_sequence_setsB(iopt, rfile, ifile, &rseq, &iseq);
 
   /*
     print_taxonomy(taxonomy, num_tnodes);
@@ -131,7 +130,7 @@ int main (int argc, char **argv) {
   */
 
   if ((pdistances = (double *) malloc(rseq->num_seqs * sizeof(double))) == NULL) {
-    fprintf(stderr,"ERROR: cannot maloc %d doubles for pdistances.\n",rseq->num_seqs);
+    fprintf(stderr,"ERROR: cannot malloc %d doubles for pdistances.\n",rseq->num_seqs);
     perror(""); exit(-1);
   }
 
@@ -141,6 +140,6 @@ int main (int argc, char **argv) {
     compute_cnode_probs(taxonomy, 0, 1.0, model, scs, pth, pdistances);
     printf("\n");
   }
-  
+
   return(0);
 }

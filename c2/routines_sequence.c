@@ -326,6 +326,89 @@ SequenceSetB *read_aligned_sequencesB(const char *filename, const int len, const
   return(s);
 }
 
+void assert_length_match(const char *fname, const int len1, const int len2) {
+  if (len1 != len2) {
+    fprintf(
+      stderr,
+      "ERROR: sequence lengths in file %s do not match expected value (%d,%d).\n",
+      fname,len1,len2
+    );
+    exit(1);
+  }
+}
+
+void read_sequence_sets(InputOptions iopt, const char * rfile, const char * ifile,
+                         SequenceSet **rseq, SequenceSet **iseq
+) {
+  int rlen, ilen;
+
+  if (iopt.len > 0) {
+    if (iopt.n_rseq > 0) {
+      rlen = iopt.len;
+    } else {
+      scan_aligned_sequences(rfile, &rlen, &iopt.n_rseq);
+      assert_length_match(rfile, iopt.len, rlen);
+    }
+
+    if (iopt.n_iseq > 0) {
+      ilen = iopt.len;
+    } else {
+      scan_aligned_sequences(ifile, &ilen, &iopt.n_iseq);
+      assert_length_match(ifile, iopt.len, ilen);
+    }
+  } else if (iopt.n_rseq > 0) {
+    scan_aligned_sequences(ifile, &ilen, &iopt.n_iseq);
+    rlen = ilen;
+  } else {
+    scan_aligned_sequences(rfile, &rlen, &iopt.n_rseq);
+    if (iopt.n_iseq > 0) {
+      ilen = rlen;
+    } else {
+      scan_aligned_sequences(ifile, &ilen, &iopt.n_iseq);
+      assert_length_match(ifile, rlen, ilen);
+    }
+  }
+
+  *rseq = read_aligned_sequences(rfile, rlen, iopt.n_rseq);
+  *iseq = read_aligned_sequences(ifile, ilen, iopt.n_iseq);
+}
+
+void read_sequence_setsB(InputOptions iopt, const char * rfile, const char * ifile,
+    SequenceSetB **rseq, SequenceSetB **iseq
+) {
+  int rlen, ilen;
+
+  if (iopt.len > 0) {
+    if (iopt.n_rseq > 0) {
+      rlen = iopt.len;
+    } else {
+      scan_aligned_sequences(rfile, &rlen, &iopt.n_rseq);
+      assert_length_match(rfile, iopt.len, rlen);
+    }
+
+    if (iopt.n_iseq > 0) {
+      ilen = iopt.len;
+    } else {
+      scan_aligned_sequences(ifile, &ilen, &iopt.n_iseq);
+      assert_length_match(ifile, iopt.len, ilen);
+    }
+  } else if (iopt.n_rseq > 0) {
+    scan_aligned_sequences(ifile, &ilen, &iopt.n_iseq);
+    rlen = ilen;
+  } else {
+    scan_aligned_sequences(rfile, &rlen, &iopt.n_rseq);
+    if (iopt.n_iseq > 0) {
+      ilen = rlen;
+    } else {
+      scan_aligned_sequences(ifile, &ilen, &iopt.n_iseq);
+      assert_length_match(ifile, rlen, ilen);
+    }
+  }
+
+  *rseq = read_aligned_sequencesB(rfile, rlen, iopt.n_rseq);
+  *iseq = read_aligned_sequencesB(ifile, ilen, iopt.n_iseq);
+}
+
 #pragma GCC target ("sse4.2")
 double pdistB(const long unsigned int *a, const long unsigned int *ma,
               const long unsigned int *b, const long unsigned int *mb,

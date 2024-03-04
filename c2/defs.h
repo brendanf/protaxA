@@ -5,10 +5,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 
 #define NUCLEOTIDES_IN_WORD 16
 #define MAXLINE 1024
 #define UNKNAME "unk"
+
+typedef struct {
+  int len, n_rseq, n_iseq;
+} InputOptions;
 
 typedef struct {
   int nid, pid, level;
@@ -45,16 +50,25 @@ TaxonomyNode *read_taxonomy(char *filename, int *num_nodes);
 int add_rseq2taxonomy(char *filename, TaxonomyNode *node);
 int print_taxonomy(TaxonomyNode *node, int num_nodes);
 
+/* routines_cli.c */
+
+InputOptions get_input_options(const int argc, char * const * argv);
+InputOptions get_input_options_custom(const int argc, char * const * argv, const char * options);
+
 /* routines_sequence.c */
 
 void scan_aligned_sequences(const char *filename, int *len, int *num_seqs);
 
 SequenceSet *read_aligned_sequences(const char *filename, const int len, const int num_seqs);
+void read_sequence_sets(InputOptions iopt, const char * rfile, const char * ifile,
+                         SequenceSet **rseq, SequenceSet **iseq);
 double pdist(const char *a, const char *b, const int len);
 int compute_distances(const SequenceSet *a, const char *seq, double *pdistances);
 
 int nucleotide2binary(const char *s, const int n, long unsigned int *b, long unsigned int *m);
 SequenceSetB *read_aligned_sequencesB(const char *filename, const int len, const int num_seqs);
+void read_sequence_setsB(InputOptions iopt, const char * rfile, const char * ifile,
+                         SequenceSetB **rseq, SequenceSetB **iseq);
 double pdistB(const long unsigned int *a, const long unsigned int *ma,
               const long unsigned int *b, const long unsigned int *mb,
               const int n, const int n2);

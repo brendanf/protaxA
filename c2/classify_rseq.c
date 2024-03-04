@@ -136,7 +136,9 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
 
 
 int main (int argc, char **argv) {
-  int i,j, num_tnodes, num_sclevels, rlen, n_rseq;
+  InputOptions iopt;
+  char *rfile;
+  int i,j, num_tnodes, num_sclevels;
   SequenceSetB *rseq;
   TaxonomyNode *taxonomy;
   Model *model;
@@ -144,26 +146,33 @@ int main (int argc, char **argv) {
   double *pdistances;
   int n_input_index, *input_index;
 
-  if (argc < 7) {
+  iopt = get_input_options_custom(argc, argv, ":l:r:");
+
+  if (argc - optind != 7) {
     fprintf(stderr, "classify reference sequences (whose indices in index_file) by not utilizing self-similarity\n");
-    fprintf(stderr,"usage: classify_rseq taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold input_rindex_file\n");
+    fprintf(stderr,"usage: classify_rseq [-l len] [-r n_rseq] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold input_rindex_file\n");
     exit(0);	    
   }
 
-  taxonomy = read_taxonomy(argv[1], &num_tnodes);
-  scan_aligned_sequences(argv[2], &rlen, &n_rseq);
-  rseq = read_aligned_sequencesB(argv[2], rlen, n_rseq);
-  add_rseq2taxonomy(argv[3], taxonomy);
-  model = read_model(argv[4]);
-  scs=read_level_scalings(argv[5], &num_sclevels);
+  taxonomy = read_taxonomy(argv[optind++], &num_tnodes);
+  rfile = argv[optind++];
+  add_rseq2taxonomy(argv[optind++], taxonomy);
+  model = read_model(argv[optind++]);
+  scs=read_level_scalings(argv[optind++], &num_sclevels);
 
   if (model->num_levels != num_sclevels) {
     fprintf(stderr,"ERROR: %d model levels but %d scaling levels, files '%s' and '%s'.\n", model->num_levels, num_sclevels, argv[4], argv[5]);
     exit(0);
   }
   
-  pth = atof(argv[6]);  
-  input_index = read_rseq_indices(argv[7], &n_input_index);
+  pth = atof(argv[optind++]);
+
+  if (iopt.len * iopt.n_rseq == 0) {
+    scan_aligned_sequences(rfile, &iopt.len, &iopt.n_rseq);
+  }
+  rseq = read_aligned_sequencesB(rfile, iopt.len, iopt.n_rseq);
+
+  input_index = read_rseq_indices(argv[optind++], &n_input_index);
   
   if ((pdistances = (double *) malloc(rseq->num_seqs * sizeof(double))) == NULL) {
     fprintf(stderr,"ERROR: cannot maloc %d doubles for pdistances.\n",rseq->num_seqs);
