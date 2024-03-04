@@ -1,10 +1,31 @@
 #include <zlib.h>
 #include "defs.h"
 
+int insertion_free_length(const char * line) {
+  int i = 0, l = 0;
+  while (line[i] != '\0' && line[i] != '\n' && i < MAXLINE) {
+    if ((line[i] < 'a') || (line[i] > 'z')) {
+      l++;
+    }
+    i++;
+  };
+  return l;
+}
+
+void insertion_free_copy(const char * line, char * target) {
+  int i = 0, j = 0;
+  while (line[i] != '\0' && line[i] != '\n' && i < MAXLINE) {
+    if ((line[i] < 'a') || (line[i] > 'z')) {
+      target[j] = line[i];
+      j++;
+    }
+    i++;
+  }
+}
 SequenceSet *read_aligned_sequences(char *filename) {
   gzFile fp;
   char line[MAXLINE], *token;
-  int len,linecount, i, ok;
+  int len,linecount, i, ok, iflen;
   SequenceSet *s;
   char *thisfunction = "read_aligned_sequences";
   
@@ -77,12 +98,13 @@ SequenceSet *read_aligned_sequences(char *filename) {
       fprintf(stderr,"ERROR (%s): cannot read entry %d sequence (linecount %d) from file '%s'.\n",thisfunction,i,2*i+2,filename);
       perror("");exit(-1);
     }
-    if (strlen(line) != (len+1)) {
-      fprintf(stderr,"ERROR (%s): sequence lenghts differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
+    iflen = insertion_free_length(line);
+    if (iflen != len) {
+      fprintf(stderr,"ERROR (%s): sequence lengths differ from %d, line %d, file '%s'.\n",thisfunction,len,2*i+2,filename);
       perror("");exit(-1);
     }
     
-    strncpy(s->seq[i], line, len);
+    insertion_free_copy(line, s->seq[i]);
     s->seq[i][len] = '\0';
   }
 
