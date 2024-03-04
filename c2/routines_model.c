@@ -131,7 +131,7 @@ double **read_level_scalings(char *filename, int *num_levels) {
   return (sc);
 }
 
-int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances) {
+int compute_cnode_probs_best2(const char *qid, TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances) {
   int i,j,cid,k;
   double dist,mindist1, mindist2, maxz,ezsum, *beta;
   const double *sc;
@@ -158,9 +158,9 @@ int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, cons
     }
 
     /* printf("  %s %f %f\n",node[cid].name,mindist,avedist); */
-    
+
     /* use prob temporarily to store z */
-    if (node[cid].isunk) {     
+    if (node[cid].isunk) {
       node[cid].prob = 0.0;
       node[cid].no_rseqs = 1;
     }
@@ -177,7 +177,7 @@ int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, cons
     if (node[cid].prob > maxz)
       maxz = node[cid].prob;
   }
-  
+
   ezsum = 1e-100;
   for (i=0; i<node[nid].num_cnodes; i++) {
     cid = node[nid].cnode_index[i];
@@ -198,16 +198,16 @@ int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, cons
     if (node[cid].no_rseqs)
       node[nid].sumcprob_no_rseqs += node[cid].prob;
     if ((node[cid].no_rseqs == 0) && (node[cid].prob >= pth)) {
-      printf(" %s %f",node[cid].name, node[cid].prob);
+      printf("%s %d %s %f\n", qid, node[cid].level, node[cid].name, node[cid].prob);
       if (node[cid].num_cnodes)
-	compute_cnode_probs_best2(node, cid, node[cid].prob, m, scs, pth, pdistances);
+	compute_cnode_probs_best2(qid, node, cid, node[cid].prob, m, scs, pth, pdistances);
     }
   }
   if (node[nid].sumcprob_no_rseqs >= pth) {
     if (node[nid].level == 0)
-      printf(" %s %f",UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %d %s %f\n",qid, node[nid].level + 1, UNKNAME, node[nid].sumcprob_no_rseqs);
     else
-      printf(" %s,%s %f",node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %d %s,%s %f\n",qid, node[nid].level + 1, node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
   }
 
   return(0);
@@ -217,7 +217,7 @@ int print_model(Model *m) {
   int i,j;
   for (i=0; i<m->num_levels; i++) {
     printf("model level %d:",i+1);
-    for (j=0; j<m->dim; j++) 
+    for (j=0; j<m->dim; j++)
       printf(" %f",m->params[i][j]);
     printf("\n");
   }

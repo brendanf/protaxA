@@ -47,7 +47,7 @@ int *read_rseq_indices(char *filename, int *num_indices) {
   return (rindex);
 }
 
-int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double *pdistances, int self_index) {
+int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double *pdistances, int self_index) {
   int i,j,cid,k;
   double dist,mindist1, mindist2, maxz,ezsum, *beta, *sc;
   int num_rseqs;
@@ -63,18 +63,18 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
     for (j=0; j<node[cid].num_rseqs; j++) {
       k = node[cid].rseq_index[j];
       if (k == self_index) {
-	num_rseqs--;
+        num_rseqs--;
       }
       else {
-	/* dist = pdist(seq, rseq->seq[k], rseq->alen); */
-	dist = pdistances[k];
-	if (dist < mindist1) {
-	  mindist2 = mindist1;
-	  mindist1 = dist;
-	}
-	else if (dist < mindist2) {
-	  mindist2 = dist;
-	}
+        /* dist = pdist(seq, rseq->seq[k], rseq->alen); */
+        dist = pdistances[k];
+        if (dist < mindist1) {
+          mindist2 = mindist1;
+          mindist1 = dist;
+        }
+        else if (dist < mindist2) {
+          mindist2 = dist;
+        }
       }
     }
     
@@ -119,16 +119,16 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
     if (node[cid].no_rseqs)
       node[nid].sumcprob_no_rseqs += node[cid].prob;
     if ((node[cid].no_rseqs == 0) && (node[cid].prob >= pth)) {
-      printf(" %s %f",node[cid].name, node[cid].prob);
+      printf("%s %s %f",qid, node[cid].name, node[cid].prob);
       if (node[cid].num_cnodes)
-	compute_cnode_probs(node, cid, node[cid].prob, m, scs, pth, pdistances, self_index);
+        compute_cnode_probs(qid, node, cid, node[cid].prob, m, scs, pth, pdistances, self_index);
     }
   }
   if (node[nid].sumcprob_no_rseqs >= pth) {
     if (node[nid].level == 0)
-      printf(" %s %f",UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %s %f",UNKNAME, qid, node[nid].sumcprob_no_rseqs);
     else
-      printf(" %s,%s %f",node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %s,%s %f", qid, node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
   }
 
   return(0);
@@ -182,9 +182,7 @@ int main (int argc, char **argv) {
   for (i=0; i<n_input_index; i++) {
     j = input_index[i];
     compute_distancesB(rseq, rseq->b[j], rseq->m[j], pdistances);
-    printf("%s",rseq->id[j]);
-    compute_cnode_probs(taxonomy, 0, 1.0, model, scs, pth, pdistances, j);
-    printf("\n");
+    compute_cnode_probs(rseq->id[j], taxonomy, 0, 1.0, model, scs, pth, pdistances, j);
   }
   
   return(0);

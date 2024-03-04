@@ -1,7 +1,7 @@
 #include <time.h>
 #include "defs.h"
 
-int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, double **scs, double pth, double *pdistances) {
+int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double prevprob, Model *m, double * restrict * restrict scs, double pth, const double *pdistances) {
   int i,j,cid,k;
   double dist, mindist1, mindist2, maxz,ezsum, *beta, *sc;
 
@@ -74,16 +74,16 @@ int compute_cnode_probs(TaxonomyNode *node, int nid, double prevprob, Model *m, 
     if (node[cid].no_rseqs)
       node[nid].sumcprob_no_rseqs += node[cid].prob;
     if ((node[cid].no_rseqs == 0) && (node[cid].prob >= pth)) {
-      printf("%d %s %f dist1: %d %.3f dist2: %d %.3f \n",node[cid].level,node[cid].name, node[cid].prob, node[cid].ind1, node[cid].dist1,node[cid].ind2, node[cid].dist2);
+      printf("%s %d %s %f dist1: %d %.3f dist2: %d %.3f \n", qid, node[cid].level, node[cid].name, node[cid].prob, node[cid].ind1, node[cid].dist1,node[cid].ind2, node[cid].dist2);
       if (node[cid].num_cnodes)
-	compute_cnode_probs(node, cid, node[cid].prob, m, scs, pth, pdistances);
+	compute_cnode_probs(qid, node, cid, node[cid].prob, m, scs, pth, pdistances);
     }
   }
   if (node[nid].sumcprob_no_rseqs >= pth) {
     if (node[nid].level == 0)
-      printf("%d %s %f\n",node[nid].level+1, UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %d %s %f\n",qid, node[nid].level+1, UNKNAME, node[nid].sumcprob_no_rseqs);
     else
-      printf("%d %s,%s %f\n",node[nid].level+1,node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %d %s,%s %f\n",qid, node[nid].level+1,node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
   }
 
   return(0);
@@ -136,9 +136,7 @@ int main (int argc, char **argv) {
 
   for (i=0; i<iseq->num_seqs; i++) {
     compute_distancesB(rseq, iseq->b[i], iseq->m[i], pdistances);
-    printf("%s\n",iseq->id[i]);
-    compute_cnode_probs(taxonomy, 0, 1.0, model, scs, pth, pdistances);
-    printf("\n");
+    compute_cnode_probs(iseq->id[i], taxonomy, 0, 1.0, model, scs, pth, pdistances);
   }
 
   return(0);

@@ -80,7 +80,7 @@ int compute_distancesB(const SequenceSetB *a,
 
 Model *read_model(char *filename);
 double **read_level_scalings(char *filename, int *num_levels);
-int compute_cnode_probs_best2(TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances);
+int compute_cnode_probs_best2(const char *qid, TaxonomyNode *node, int nid, double prevprob, const Model *m, const double **scs, double pth, const double *pdistances);
 int print_model(Model *m);
 
 

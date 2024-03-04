@@ -50,14 +50,12 @@ int main (int argc, char **argv) {
     start_time = clock();
     compute_distancesB(rseq, iseq->b[i], iseq->m[i], pdistances);
     now_time = clock();
-    printf("distances: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
+    fprintf(stderr, "distances: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
     start_time = clock();
-    printf("%s",iseq->id[i]);
-    compute_cnode_probs_best2(taxonomy, 0, 1.0, model, (const double **)scs, pth, pdistances);
-    printf("\n");
+    compute_cnode_probs_best2(iseq->id[i], taxonomy, 0, 1.0, model,
+                              (const double **)scs, pth, pdistances);
     now_time = clock();
-    printf("classification: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
-
+    fprintf(stderr, "classification: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
   }
 
   return(0);
