@@ -2,4 +2,6 @@ classify_v1
 classify_v2
 classify_info
 classify_rseq
-dist_test
+dist_best
+dist_bipart
+dist_matrix

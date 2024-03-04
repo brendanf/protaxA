@@ -1,5 +1,5 @@
-#include "defs.h"
 #include <time.h>
+#include "defs.h"
 
 int get_mini(double *pdistances, int n) {
   int i, mini;
@@ -29,8 +29,8 @@ int main (int argc, char **argv) {
   iopt = get_input_options(argc, argv);
 
   if (argc - optind != 2) {
-    fprintf(stderr,"dist_test: calculate all pdistances between input and reference sequences and print the best for each input sequence\n");
-    fprintf(stderr,"usage: dist_test [-l len] [-r n_rseq] [-i n_iseq] rseqFASTA inputFASTA\n");
+    fprintf(stderr,"dist_best: calculate all pdistances between input and reference sequences and print the best for each input sequence\n");
+    fprintf(stderr,"usage: dist_best [-l len] [-r n_rseq] [-i n_iseq] rseqFASTA inputFASTA\n");
     exit(0);
   }
 
@@ -52,7 +52,6 @@ int main (int argc, char **argv) {
     /* simple application: get smallest distance (neglecting the possible ties..) */
     mini = get_mini(pdistances, rseq->num_seqs);
     printf("%s %s %f\n",iseq->id[i], rseq->id[mini], pdistances[mini]);
-
   }
   now_time = clock();
   fprintf(stderr,"timing: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);

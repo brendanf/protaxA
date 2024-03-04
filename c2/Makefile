@@ -3,7 +3,7 @@ CFLAGS = -O2
 LDFLAGS =
 LIBS = -lm -lz
 
-PROGS = dist_test classify_v1 classify_v2 classify_info classify_rseq
+PROGS = dist_best classify_v1 classify_v2 classify_info classify_rseq dist_bipart dist_matrix
 PROGS_SRCS = $(PROGS:=.c)
 
 ROUTINES_SRCS = routines_taxonomy.c routines_sequence.c routines_model.c routines_cli.c
