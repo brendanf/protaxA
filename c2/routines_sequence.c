@@ -106,7 +106,7 @@ SequenceSet *read_aligned_sequences(const char *filename, const int len, const i
       fprintf(stderr,"ERROR (%s): cannot read entry %d name (linecount %d) from file '%s'.\n",thisfunction,i,2*i+1,filename);
       perror("");exit(-1);
     }
-    token = strtok(line," \t\n");
+    token = strtok(line," \t\n|");
     s->id[i] = strdup(token+1);
 
     if (gzgets(fp, line, MAXLINE) == NULL) {
@@ -304,7 +304,7 @@ SequenceSetB *read_aligned_sequencesB(const char *filename, const int len, const
       fprintf(stderr,"ERROR (%s): cannot read entry %d name (linecount %d) from file '%s'.\n",thisfunction,i,2*i+1,filename);
       perror("");exit(-1);
     }
-    token = strtok(line," \t\n");
+    token = strtok(line," \t\n|");
     s->id[i] = strdup(token+1);
 
     if (gzgets(fp, line, MAXLINE) == NULL) {
