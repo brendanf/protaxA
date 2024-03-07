@@ -32,12 +32,14 @@ typedef struct {
 typedef struct {
   int num_seqs, alen;
   char **seq, **id;
+  int *start, *end;
 } SequenceSet;
 
 typedef struct {
   int num_seqs, alen, ulen, mulen;
   char **id;
   long unsigned int **b, **m;
+  int *start, *end;
 } SequenceSetB;
 
 typedef struct {
@@ -63,18 +65,21 @@ void scan_aligned_sequences(const char *filename, int *len, int *num_seqs);
 SequenceSet *read_aligned_sequences(const char *filename, const int len, const int num_seqs);
 void read_sequence_sets(InputOptions iopt, const char * rfile, const char * ifile,
                          SequenceSet **rseq, SequenceSet **iseq);
-double pdist(const char *a, const char *b, const int len);
-int compute_distances(const SequenceSet *a, const char *seq, double *pdistances);
+double pdist(const char *a, const char *b, const int start, const int end);
+int compute_distances(const SequenceSet *a, const char *seq,
+                      const int start, const int end,
+                      double *pdistances);
 
-int nucleotide2binary(const char *s, const int n, long unsigned int *b, long unsigned int *m);
+int nucleotide2binary(const char *s, const int n, long unsigned int *b, long unsigned int *m, int *start, int *end);
 SequenceSetB *read_aligned_sequencesB(const char *filename, const int len, const int num_seqs);
 void read_sequence_setsB(InputOptions iopt, const char * rfile, const char * ifile,
                          SequenceSetB **rseq, SequenceSetB **iseq);
 double pdistB(const long unsigned int *a, const long unsigned int *ma,
               const long unsigned int *b, const long unsigned int *mb,
-              const int n, const int n2);
+              const int start, const int end);
 int compute_distancesB(const SequenceSetB *a,
                        const long unsigned int *b, const long unsigned int *m,
+                       const int start, const int end,
                        double *pdistances);
 
 /* routines_model.c */

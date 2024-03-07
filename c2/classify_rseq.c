@@ -190,7 +190,7 @@ int main (int argc, char **argv) {
 
   for (i=0; i<n_input_index; i++) {
     j = input_index[i];
-    compute_distancesB(rseq, rseq->b[j], rseq->m[j], pdistances);
+    compute_distancesB(rseq, rseq->b[j], rseq->m[j], rseq->start[i], rseq->end[i], pdistances);
     compute_cnode_probs(rseq->id[j], taxonomy, 0, 1.0, model, scs, pth, rth, pdistances, j);
   }
 

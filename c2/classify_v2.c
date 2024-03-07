@@ -56,7 +56,7 @@ int main (int argc, char **argv) {
 
   for (i=0; i<iseq->num_seqs; i++) {
     start_time = clock();
-    compute_distancesB(rseq, iseq->b[i], iseq->m[i], pdistances);
+    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i], pdistances);
     now_time = clock();
     fprintf(stderr, "distances: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
     start_time = clock();

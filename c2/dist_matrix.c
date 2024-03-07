@@ -3,7 +3,7 @@
 int main (int argc, char **argv) {
   InputOptions iopt;
   char *thresh_param, *thresh_result, *ifile;
-  int i, j;
+  int i, j, start, end;
   SequenceSetB *iseq;
   double thresh, d;
 
@@ -38,7 +38,9 @@ int main (int argc, char **argv) {
 
   for (i=1; i<iseq->num_seqs; i++) {
     for (j=0; j<i; j++) {
-      d = pdistB(iseq->b[i], iseq->m[i], iseq->b[j], iseq->m[j], iseq->ulen, iseq->mulen);
+      start = iseq->start[i] > iseq->start[j] ? iseq->start[i] : iseq->start[j];
+      end = iseq->end[i] < iseq->end[j] ? iseq->end[i] : iseq->end[j];
+      d = pdistB(iseq->b[i], iseq->m[i], iseq->b[j], iseq->m[j], start, end);
       if (d <= thresh) printf("%s %s %f\n",iseq->id[i], iseq->id[j], d);
     }
   }

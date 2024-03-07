@@ -144,7 +144,7 @@ int main (int argc, char **argv) {
   }
 
   for (i=0; i<iseq->num_seqs; i++) {
-    compute_distancesB(rseq, iseq->b[i], iseq->m[i], pdistances);
+    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i], pdistances);
     compute_cnode_probs(iseq->id[i], taxonomy, 0, 1.0, model, scs, pth, rth, pdistances);
   }
 
