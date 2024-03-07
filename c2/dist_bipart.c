@@ -7,6 +7,8 @@ int main (int argc, char **argv) {
   SequenceSetB *rseq,*iseq;
   double thresh, d;
 
+  setvbuf(stdout, NULL, _IOLBF, 0);
+
   iopt = get_input_options(argc, argv);
 
   if (argc - optind != 3) {

@@ -26,7 +26,7 @@ int *read_rseq_indices(char *filename, int *num_indices) {
   }
 
   rindex = malloc_int_array(n);
-  
+
   rewind(fp);
 
   for (j=0; j<n; j++) {
@@ -147,6 +147,8 @@ int main (int argc, char **argv) {
   double pth, rth, **scs;
   double *pdistances;
   int n_input_index, *input_index;
+
+  setvbuf(stdout, NULL, _IOLBF, 0);
 
   iopt = get_input_options_custom(argc, argv, ":l:r:t:");
 

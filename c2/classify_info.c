@@ -102,6 +102,8 @@ int main (int argc, char **argv) {
   double pth, rth, **scs;
   double *pdistances;
 
+  setvbuf(stdout, NULL, _IOLBF, 0);
+
   iopt = get_input_options(argc, argv);
 
   if (argc - optind != 7) {

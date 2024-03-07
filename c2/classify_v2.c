@@ -12,6 +12,8 @@ int main (int argc, char **argv) {
   double *pdistances;
   clock_t start_time, now_time;
 
+  setvbuf(stdout, NULL, _IOLBF, 0);
+
   iopt = get_input_options(argc, argv);
 
   if (argc - optind != 7) {

@@ -7,6 +7,8 @@ int main (int argc, char **argv) {
   SequenceSetB *iseq;
   double thresh, d;
 
+  setvbuf(stdout, NULL, _IOLBF, 0);
+
   iopt = get_input_options_custom(argc, argv, ":l:i:");
 
   if (argc - optind != 2) {
