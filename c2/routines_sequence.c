@@ -164,14 +164,23 @@ double pdist(const char *a, const char *b, const int start, const int end) {
 
 
 int compute_distances(const SequenceSet *a, const char *seq, const int start,
-                      const int end, double *pdistances)
+                      const int end, const int min_len, double *pdistances)
 {
   int i, s, e;
+
+  if (end - start < min_len) {
+    for (i = 0; i < a->num_seqs; i++) pdistances[i] = 1.0;
+    return 0;
+  }
 
   for (i=0; i<a->num_seqs; i++) {
     s = (start > a->start[i]) ? start : a->start[i];
     e = (end < a->end[i]) ? end : a->end[i];
-    pdistances[i] = pdist(seq, a->seq[i], s, e);
+    if (e - s < min_len) {
+      pdistances[i] = 1.0;
+    } else {
+      pdistances[i] = pdist(seq, a->seq[i], s, e);
+    }
   }
   return (0);
 }
@@ -474,14 +483,24 @@ double pdistB(const long unsigned int *a, const long unsigned int *ma,
 
 int compute_distancesB(const SequenceSetB *a, const long unsigned int *b, const long unsigned int *m,
                        const int start, const int end,
+                       const int min_len,
                        double *pdistances)
 {
-  int i;
+  int i, s, e;
+
+  if (end - start < min_len) {
+    for (i = 0; i < a->num_seqs; i++) pdistances[i] = 1.0;
+    return 0;
+  }
 
   for (i=0; i<a->num_seqs; i++) {
-    pdistances[i] = pdistB(b, m, a->b[i], a->m[i],
-                           (start > a->start[i]) ? start : a->start[i],
-                           (end > a->end[i]) ? a->end[i] : end);
+    s = (start > a->start[i]) ? start : a->start[i];
+    e = (end < a->end[i]) ? end : a->end[i];
+    if (e - s < min_len) {
+      pdistances[i] = 1.0;
+    } else {
+      pdistances[i] = pdistB(b, m, a->b[i], a->m[i], s, e);
+    }
   }
   return (0);
 }

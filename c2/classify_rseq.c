@@ -150,11 +150,11 @@ int main (int argc, char **argv) {
 
   setvbuf(stdout, NULL, _IOLBF, 0);
 
-  iopt = get_input_options_custom(argc, argv, ":l:r:t:");
+  iopt = get_input_options_custom(argc, argv, ":l:r:t:m:");
 
   if (argc - optind != 7) {
     fprintf(stderr, "classify reference sequences (whose indices in index_file) by not utilizing self-similarity\n");
-    fprintf(stderr,"usage: classify_rseq [-l len] [-r n_rseq] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold input_rindex_file\n");
+    fprintf(stderr,"usage: classify_rseq [-l len] [-r n_rseq] [-m min_overlap] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold input_rindex_file\n");
     exit(0);
   }
 
@@ -190,7 +190,8 @@ int main (int argc, char **argv) {
 
   for (i=0; i<n_input_index; i++) {
     j = input_index[i];
-    compute_distancesB(rseq, rseq->b[j], rseq->m[j], rseq->start[i], rseq->end[i], pdistances);
+    compute_distancesB(rseq, rseq->b[j], rseq->m[j], rseq->start[i], rseq->end[i],
+                       iopt.min_len, pdistances);
     compute_cnode_probs(rseq->id[j], taxonomy, 0, 1.0, model, scs, pth, rth, pdistances, j);
   }
 

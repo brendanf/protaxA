@@ -32,7 +32,7 @@ int main (int argc, char **argv) {
 
   if (argc - optind != 2) {
     fprintf(stderr,"dist_best: calculate all pdistances between input and reference sequences and print the best for each input sequence\n");
-    fprintf(stderr,"usage: dist_best [-l len] [-r n_rseq] [-i n_iseq] rseqFASTA inputFASTA\n");
+    fprintf(stderr,"usage: dist_best [-l len] [-r n_rseq] [-i n_iseq] [-m min_overlap] rseqFASTA inputFASTA\n");
     exit(0);
   }
 
@@ -48,8 +48,10 @@ int main (int argc, char **argv) {
 
   start_time = clock();
   for (i=0; i<iseq->num_seqs; i++) {
+    if (iseq->end[i] - iseq->start[i] < iopt.min_len) continue;
     /* compute all distances between input sequence i and reference sequences */
-    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i], pdistances);
+    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i],
+                       iopt.min_len, pdistances);
 
     /* simple application: get smallest distance (neglecting the possible ties..) */
     mini = get_mini(pdistances, rseq->num_seqs);

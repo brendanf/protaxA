@@ -13,7 +13,7 @@
 
 typedef struct {
   double rth;
-  int len, n_rseq, n_iseq;
+  int len, n_rseq, n_iseq, min_len;
 } InputOptions;
 
 typedef struct {
@@ -68,6 +68,7 @@ void read_sequence_sets(InputOptions iopt, const char * rfile, const char * ifil
 double pdist(const char *a, const char *b, const int start, const int end);
 int compute_distances(const SequenceSet *a, const char *seq,
                       const int start, const int end,
+                      const int min_len,
                       double *pdistances);
 
 int nucleotide2binary(const char *s, const int n, long unsigned int *b, long unsigned int *m, int *start, int *end);
@@ -80,6 +81,7 @@ double pdistB(const long unsigned int *a, const long unsigned int *ma,
 int compute_distancesB(const SequenceSetB *a,
                        const long unsigned int *b, const long unsigned int *m,
                        const int start, const int end,
+                       const int min_len,
                        double *pdistances);
 
 /* routines_model.c */

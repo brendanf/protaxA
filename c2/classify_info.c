@@ -108,7 +108,7 @@ int main (int argc, char **argv) {
 
   if (argc - optind != 7) {
     fprintf(stderr,"classify sequences and print out information regarding distances to refseqs\n");
-    fprintf(stderr,"usage: classify_info [-l len] [-r n_rseq] [-i n_iseq] [-t reporting_threshold] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
+    fprintf(stderr,"usage: classify_info [-l len] [-r n_rseq] [-i n_iseq] [-t reporting_threshold] [-m min_overlap] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
     exit(0);
   }
 
@@ -144,7 +144,8 @@ int main (int argc, char **argv) {
   }
 
   for (i=0; i<iseq->num_seqs; i++) {
-    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i], pdistances);
+    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i],
+                       iopt.min_len, pdistances);
     compute_cnode_probs(iseq->id[i], taxonomy, 0, 1.0, model, scs, pth, rth, pdistances);
   }
 

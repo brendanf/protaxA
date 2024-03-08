@@ -18,7 +18,7 @@ int main (int argc, char **argv) {
 
   if (argc - optind != 7) {
     fprintf(stderr,"classify sequences and measure timing (sequences represented as binary strings)\n");
-    fprintf(stderr,"usage: classify_v2 [-l len] [-r n_rseq] [-i n_iseq] [-t reporting_threshold] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
+    fprintf(stderr,"usage: classify_v2 [-l len] [-r n_rseq] [-i n_iseq] [-t reporting_threshold] [-m min_overlap] taxonomy rseqFASTA taxonomy2rseq modelparameters scalingfile probability_threshold inputFASTA\n");
     exit(0);
   }
 
@@ -56,7 +56,8 @@ int main (int argc, char **argv) {
 
   for (i=0; i<iseq->num_seqs; i++) {
     start_time = clock();
-    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i], pdistances);
+    compute_distancesB(rseq, iseq->b[i], iseq->m[i], iseq->start[i], iseq->end[i],
+                       iopt.min_len, pdistances);
     now_time = clock();
     fprintf(stderr, "distances: %f seconds\n",(double) (now_time - start_time) / CLOCKS_PER_SEC);
     start_time = clock();

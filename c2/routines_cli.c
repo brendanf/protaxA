@@ -1,13 +1,13 @@
 #include "defs.h"
 
 InputOptions get_input_options(const int argc, char * const * argv) {
-  return get_input_options_custom(argc, argv, ":l:r:i:t:");
+  return get_input_options_custom(argc, argv, ":l:r:i:t:m:");
 }
 
 InputOptions get_input_options_custom(const int argc, char * const * argv,
                                       const char * options) {
   int opt;
-  InputOptions iopt = {-1.0, 0, 0, 0};
+  InputOptions iopt = {-1.0, 0, 0, 0, 1};
   char *thresh_result;
 
   while ((opt = getopt(argc, argv, options)) > 0) {
@@ -46,6 +46,14 @@ InputOptions get_input_options_custom(const int argc, char * const * argv,
         fprintf(stderr, "ERROR: reporting threshold must be in the range [0,1]. value: %f\n", iopt.rth);
         exit(-1);
       }
+      break;
+    case 'm':
+      iopt.min_len = atoi(optarg);
+      if (iopt.min_len <= 0) {
+        fprintf(stderr,"ERROR: minimum match length must be a positive integer: %s", optarg);
+        exit(-1);
+      }
+      fprintf(stderr, "Using user supplied minimum overlap length: %d\n", iopt.min_len);
       break;
     case ':':
       fprintf(stderr, "Option -%c requires an operand\n", optopt);
