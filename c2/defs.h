@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #define NUCLEOTIDES_IN_WORD 16
-#define MAXLINE 1024
+#define MAXLINE 10240
 #define UNKNAME "unk"
 
 typedef struct {
