@@ -83,7 +83,7 @@ int compute_cnode_probs(const char *qid, TaxonomyNode *node, int nid, double pre
   }
   if (node[nid].sumcprob_no_rseqs >= rth) {
     if (node[nid].level == 0)
-      printf("%s %d %s %f\n",qid, node[nid].level+1, UNKNAME, node[nid].sumcprob_no_rseqs);
+      printf("%s %d %s %f dist1: NA NA dist2 NA NA \n",qid, node[nid].level+1, UNKNAME, node[nid].sumcprob_no_rseqs);
     else
       printf("%s %d %s,%s %f\n",qid, node[nid].level+1,node[nid].name, UNKNAME, node[nid].sumcprob_no_rseqs);
   }
